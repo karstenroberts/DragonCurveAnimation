@@ -60,16 +60,16 @@ public class Controller {
     }
 
     public void nextNLevels(int delveLevel){
-        System.out.println("Current curve: " + Dragon.getInstance().toString());
+        //System.out.println("Current curve: " + Dragon.getInstance().toString());
         Dragon.getInstance().delve(delveLevel);
-        System.out.println("New Curve: " + Dragon.getInstance().toString());
+        //System.out.println("New Curve: " + Dragon.getInstance().toString());
         drawCurve();
     }
 
     public void genLevel(int delveLevel){
-        System.out.println("Current curve: " + Dragon.getInstance().toString());
+        //System.out.println("Current curve: " + Dragon.getInstance().toString());
         Dragon.getInstance().genLevel(delveLevel);
-        System.out.println("New Curve: " + Dragon.getInstance().toString());
+        //System.out.println("New Curve: " + Dragon.getInstance().toString());
         drawCurve();
     }
 
