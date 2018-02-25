@@ -3,19 +3,42 @@ package sample;
 import java.util.ArrayList;
 
 public class Dragon {
+
+    /**
+     * The Fractal Singleton Instance
+     */
     private static Dragon ourInstance = new Dragon();
 
+    /**
+     * Getter for list of turns
+     * @return
+     */
     public ArrayList<DIR> getCurve() {
         return curve;
     }
 
+    /**
+     * Setter for list of turns
+     * @param curve
+     */
     public void setCurve(ArrayList<DIR> curve) {
         this.curve = curve;
     }
 
+    /**
+     * Valid turn directions
+     */
     enum DIR {L,R};
+
+    /**
+     * List of turns in current level of fractal
+     */
     private ArrayList<DIR> curve;
 
+    /**
+     * Gets instance of Dragon, or creates it if it hasn't been created already
+     * @return Dragon instance at current level
+     */
     public static Dragon getInstance() {
         if(ourInstance == null){
             ourInstance = new Dragon();
@@ -23,6 +46,9 @@ public class Dragon {
         return ourInstance;
     }
 
+    /**
+     * Constructor
+     */
     private Dragon() {
         curve = new ArrayList<>();
     }
@@ -92,6 +118,10 @@ public class Dragon {
         return reverse;
     }
 
+    /**
+     * Make it printable (relic of text only version)
+     * @return String consisting of the L's and R's that make up the fractal
+     */
     @Override
     public String toString() {
         String stringified = "";
