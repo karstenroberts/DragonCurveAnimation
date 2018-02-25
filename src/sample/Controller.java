@@ -1,17 +1,27 @@
 package sample;
 
+import javafx.animation.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
+import javafx.util.Duration;
+import javafx.scene.paint.Color;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 import static java.awt.Color.BLACK;
+import static java.awt.Color.GREEN;
 import static sample.Controller.Movement.*;
 
 public class Controller {
@@ -25,6 +35,9 @@ public class Controller {
     @FXML
     private Button drawButton;
 
+    @FXML
+    private Canvas animationCanvas;
+
     enum Movement{UP, DOWN, LEFT, RIGHT}
 
     Movement facing;
@@ -32,6 +45,10 @@ public class Controller {
     int lineLength = 2;
 
     GraphicsContext gc;
+    GraphicsContext gcA;
+
+    Animation animation;
+
 
 
     @FXML
@@ -57,6 +74,7 @@ public class Controller {
 
     public void initialize(){
         gc = canvas.getGraphicsContext2D();
+        gcA = animationCanvas.getGraphicsContext2D();
     }
 
     public void nextNLevels(int delveLevel){
@@ -74,7 +92,12 @@ public class Controller {
     }
 
     private void drawCurve(){
+        if((animation != null) && animation.getStatus().equals(Animation.Status.RUNNING)){
+            animation.stop();
+        }
+
         gc.clearRect(0,0,1700, 1000);
+        gcA.clearRect(0,0,1700,1000);
         ArrayList<Dragon.DIR> curve = Dragon.getInstance().getCurve();
 
         int canvasWidth = (int)canvas.getWidth();
@@ -162,8 +185,6 @@ public class Controller {
             upest -= upest;
         }
 
-        int difX = rightest-leftest;
-        int difY = downest-upest;
 
         if((1686.0 / (double)(rightest-leftest)) < (986.0 / (double)(downest-upest))){
             resizeFactor = 1686.0 / (double)(rightest-leftest);
@@ -171,12 +192,89 @@ public class Controller {
             resizeFactor = 986.0 / (double)(downest-upest);
         }
 
+
+        gc.setStroke(Color.BLACK);
         //subtract leftest from all points,
         for (int i = 1; i < curveList.getWholeCurve().size(); i++){
-            gc.strokeLine(((curveList.getWholeCurve().get(i-1).getX()-(leftest + negativeXFactor)) * resizeFactor)+7, ((curveList.getWholeCurve().get(i-1).getY()-(upest + negativeYFactor)) * resizeFactor)+7, ((curveList.getWholeCurve().get(i).getX()-(leftest + negativeXFactor)) * resizeFactor)+7, ((curveList.getWholeCurve().get(i).getY()-(upest+negativeYFactor)) * resizeFactor)+7);
+            double startAnX = ((curveList.getWholeCurve().get(i-1).getX()-(leftest + negativeXFactor)) * resizeFactor)+7;
+            double startAnY = ((curveList.getWholeCurve().get(i-1).getY()-(upest + negativeYFactor)) * resizeFactor)+7;
+            double endAnX = ((curveList.getWholeCurve().get(i).getX()-(leftest + negativeXFactor)) * resizeFactor)+7;
+            double endAnY = ((curveList.getWholeCurve().get(i).getY()-(upest + negativeYFactor)) * resizeFactor)+7;
+            //draw scaled lines
+            gc.strokeLine(startAnX, startAnY, endAnX, endAnY);
 
         }
-
-        //draw scaled lines
+        animation = createPathAnimation(createPath(curveList.getWholeCurve(), leftest, upest, negativeXFactor, negativeYFactor, resizeFactor), Duration.millis(2000  *Math.pow(curve.size(),.5)));
+        animation.play();
     }
+
+    private Path createPath(ArrayList<Point> curve, int leftest, int upest, int negativeXFactor, int negativeYFactor, double resizeFactor) {
+
+        Path path = new Path();
+
+        path.setStroke(Color.RED);
+        path.setStrokeWidth(2);
+
+        for(int i = 1; i < curve.size(); i++){
+            path.getElements().addAll(new MoveTo(((curve.get(i-1).getX()-(leftest + negativeXFactor)) * resizeFactor)+7, ((curve.get(i-1).getY()-(upest + negativeYFactor)) * resizeFactor)+7), new LineTo(((curve.get(i).getX()-(leftest + negativeXFactor)) * resizeFactor)+7,((curve.get(i).getY()-(upest + negativeYFactor)) * resizeFactor)+7));
+        }
+
+        return path;
+    }
+
+    private Animation createPathAnimation(Path path, Duration duration) {
+        int width = 2;
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        // move a node along a path. we want its position
+        Circle pen = new Circle(0, 0, width);
+
+        // create path transition
+        PathTransition pathTransition = new PathTransition( duration, path, pen);
+        pathTransition.currentTimeProperty().addListener( new ChangeListener<Duration>() {
+
+            Location oldLocation = null;
+
+            /**
+             * Draw a line from the old location to the new location
+             */
+            @Override
+            public void changed(ObservableValue<? extends Duration> observable, Duration oldValue, Duration newValue) {
+
+                // skip starting at 0/0
+                if( oldValue == Duration.ZERO)
+                    return;
+
+                // get current location
+                double x = pen.getTranslateX();
+                double y = pen.getTranslateY();
+
+                // initialize the location
+                if( oldLocation == null) {
+                    oldLocation = new Location();
+                    oldLocation.x = x;
+                    oldLocation.y = y;
+                    return;
+                }
+
+                // draw line
+                gc.setStroke(Color.RED);
+                gc.setFill(Color.YELLOW);
+                gc.setLineWidth(width);
+                gc.strokeLine(oldLocation.x, oldLocation.y, x, y);
+
+                // update old location with current one
+                oldLocation.x = x;
+                oldLocation.y = y;
+            }
+        });
+
+        return pathTransition;
+    }
+
+    public static class Location {
+        double x;
+        double y;
+    }
+
 }
