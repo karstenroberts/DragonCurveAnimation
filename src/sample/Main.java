@@ -11,7 +11,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("DragonUI.fxml"));
-        primaryStage.setTitle("Hello World");
+        primaryStage.setTitle("Dragon Curve Fractal Animation");
         primaryStage.setScene(new Scene(root, 1700, 1000));
         primaryStage.show();
     }

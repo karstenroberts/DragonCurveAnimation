@@ -76,6 +76,20 @@ public class Controller {
     double margin = 7;
 
 
+
+
+
+    @FXML
+    void pausePlay(){
+        if(animation != null){
+            if(animation.getStatus().equals(Animation.Status.RUNNING)){
+                animation.pause();
+            }else if(animation.getStatus().equals(Animation.Status.PAUSED)){
+                animation.play();
+            }
+        }
+    }
+
     @FXML
     void slideShow(){
         while(!iterationsField.getText().equals("stop")){
@@ -221,7 +235,7 @@ public class Controller {
         //Creates the animation, then plays it on top of the skeleton.
         //Duration done by guess and check, it isn't perfect. The smaller the number, the quicker but messier the animation.
         //Animation has some sort of acceleration that I can't seem to get rid of
-        animation = createPathAnimation(createPath(curveList.getWholeCurve(), leftest, upest, negativeXFactor, negativeYFactor, resizeFactor), Duration.millis(2000 *Math.pow(Dragon.getInstance().getCurve().size(),.6)));
+        animation = createPathAnimation(createPath(curveList.getWholeCurve(), leftest, upest, negativeXFactor, negativeYFactor, resizeFactor), /*Duration.millis(220000)*/Duration.millis( (2000 *Math.pow(Dragon.getInstance().getCurve().size(),.6)) + 4000));
         animation.play();
     }
 
