@@ -13,6 +13,8 @@
       <Button fx:id="drawButton" layoutX="1569.0" layoutY="17.0" mnemonicParsing="false" onAction="#drawCurrCurve" text="Draw" />
       <Button layoutX="1571.0" layoutY="58.0" mnemonicParsing="false" onAction="#prevLevel" text="&lt;" />
       <Button layoutX="1660.0" layoutY="58.0" mnemonicParsing="false" onAction="#nextLevel" text="&gt;" />
-      <Button layoutX="1601.0" layoutY="58.0" mnemonicParsing="false" onAction="#pausePlay" text="Pause" />
+      <Button fx:id="pausePlayButton" layoutX="1601.0" layoutY="58.0" mnemonicParsing="false" onAction="#pausePlay" text="Pause" />
+      <Button fx:id="animationButton" layoutX="1555.0" layoutY="112.0" mnemonicParsing="false" onAction="#toggleAnimation" text="Animation Toggle" />
+      <Button fx:id="skeletonButton" layoutX="1560.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleSkeleton" text="Skeleton Toggle" />
    </children>
 </Pane>

@@ -6,6 +6,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.LineTo;
@@ -20,10 +21,16 @@ import static sample.Controller.Movement.*;
 public class Controller {
 
     @FXML
+    private Button pausePlayButton;
+
+    @FXML
     private Canvas canvas;
 
     @FXML
     private TextField iterationsField;
+
+    @FXML
+    private Canvas animationCanvas;
 
     /**
      * Possible directions a segment can face
@@ -56,6 +63,11 @@ public class Controller {
     GraphicsContext gc;
 
     /**
+     * Where Animation is drawn
+     */
+    GraphicsContext gcA;
+
+    /**
      * honestly don't think this has to be global, but for some reason breaks if it's not :P
      */
     Animation animation;
@@ -75,21 +87,74 @@ public class Controller {
      */
     double margin = 7;
 
+    ListOfPoints curveList;
 
 
 
+    /**
+     * gets sets the graphics global vars
+     */
+    public void initialize(){
+        gc = canvas.getGraphicsContext2D();
+        gcA = animationCanvas.getGraphicsContext2D();
+        width = canvas.getWidth();
+        height = canvas.getHeight();
+    }
 
+
+    @FXML
+    void toggleAnimation(){
+        if(animation != null){
+            if(animationCanvas.isVisible()) {
+                if (animation.getStatus().equals(Animation.Status.RUNNING)) {
+                    animation.pause();
+                }
+                animationCanvas.setVisible(false);
+            }else{
+                animationCanvas.setVisible(true);
+                if(animation.getStatus().equals(Animation.Status.PAUSED)){
+                    animation.play();
+                }else if(animation.getStatus().equals(Animation.Status.RUNNING)){
+                    //Following three lines of code necessary to keep old animation started when animation wasn't visible from continuing.
+                    //Only occurred when switching levels with animations turned off, and turning animations back on
+                    animation.stop();
+                    gcA.clearRect(0,0,width,height);
+                    playAnimation();
+                }
+            }
+        }
+    }
+
+    @FXML
+    void toggleSkeleton(){
+        if(canvas.isVisible()){
+            canvas.setVisible(false);
+        }else{
+            canvas.setVisible(true);
+        }
+    }
+
+    /**
+     * Called by "Pause" or "Play" button. Pauses or resumes the animation, depending on the context
+     */
     @FXML
     void pausePlay(){
         if(animation != null){
             if(animation.getStatus().equals(Animation.Status.RUNNING)){
                 animation.pause();
+                pausePlayButton.setText("Play");
             }else if(animation.getStatus().equals(Animation.Status.PAUSED)){
                 animation.play();
+                pausePlayButton.setText("Pause");
             }
         }
     }
 
+// FIXME: 2/26/18
+    /**
+     * Designed to start the next level animation after current one is done.
+     * TODO:MAKE THIS THING ACTUALLY WORK
+     */
     @FXML
     void slideShow(){
         while(!iterationsField.getText().equals("stop")){
@@ -135,14 +200,7 @@ public class Controller {
         iterationsField.setText("" + currLevel);
     }
 
-    /**
-     * gets sets the graphics global var
-     */
-    public void initialize(){
-        gc = canvas.getGraphicsContext2D();
-        width = canvas.getWidth();
-        height = canvas.getHeight();
-    }
+
 
     /**
      * Draws the fractal delveLevel levels further. SUUUUPER SLOW.
@@ -178,6 +236,7 @@ public class Controller {
 
         //Erase the canvas
         gc.clearRect(0,0,1700, 1000);
+        gcA.clearRect(0,0,1700,1000);
 
         int canvasWidth = (int)canvas.getWidth();
         int canvasHeight = (int)canvas.getHeight();
@@ -187,58 +246,57 @@ public class Controller {
         int startY = canvasHeight/2;
 
         //get the list of points for all turns
-        ListOfPoints curveList = createPoints(startX,startY);
+        curveList = createPoints(startX,startY);
 
         //find furthest up, down, left, right points. Used for scaling/transformation of points so the fractal fits perfectly on screen.
         curveList.determineParams();
-        int leftest = curveList.furthestLeft;
-        int rightest = curveList.furthestRight;
-        int downest = curveList.furthestDown;
-        int upest = curveList.furthestUp;
 
-        //If some of the starting points had negative coords, need to account for that so entire fractal is on screen.
-        int negativeXFactor = 0;
-        int negativeYFactor = 0;
-        if (leftest < 0){
-            negativeXFactor = leftest;
-            rightest -= leftest;
-            leftest -= leftest;
-        }
-        if (upest < 0){
-            negativeYFactor = upest;
-            downest -= upest;
-            upest -= upest;
-        }
+        //draw basic black structure of current level of fractal
+        drawSkeleton();
 
-        //resizeFactor is used to scale up or down the fractal to fit the screen. Uses min of x scale or y scale on both X and Y coords so proportionally still square.
-        //takes into account buffer space between edge of drawing canvas and the drawn fractal
-        double resizeFactor;
-        if(((width - 2*margin) / (double)(rightest-leftest)) < ((height-2*margin) / (double)(downest-upest))){
-            resizeFactor = (width-2*margin)/ (double)(rightest-leftest);
-        }else{
-            resizeFactor = (height-2*margin) / (double)(downest-upest);
-        }
-
-        gc.setStroke(Color.BLACK);
-
-        //Goes through all turns, and draws the basic black skeleton of the fractal. Deals with all transformation of old points using negativeFactors, resizeFactor, and margin
-        for (int i = 1; i < curveList.getWholeCurve().size(); i++){
-            double startAnX = ((curveList.getWholeCurve().get(i-1).getX()-(leftest + negativeXFactor)) * resizeFactor)+margin;
-            double startAnY = ((curveList.getWholeCurve().get(i-1).getY()-(upest + negativeYFactor)) * resizeFactor)+margin;
-            double endAnX = ((curveList.getWholeCurve().get(i).getX()-(leftest + negativeXFactor)) * resizeFactor)+margin;
-            double endAnY = ((curveList.getWholeCurve().get(i).getY()-(upest + negativeYFactor)) * resizeFactor)+margin;
-            //draw scaled lines
-            gc.strokeLine(startAnX, startAnY, endAnX, endAnY);
-
-        }
 
         //Creates the animation, then plays it on top of the skeleton.
         //Duration done by guess and check, it isn't perfect. The smaller the number, the quicker but messier the animation.
         //Animation has some sort of acceleration that I can't seem to get rid of
-        animation = createPathAnimation(createPath(curveList.getWholeCurve(), leftest, upest, negativeXFactor, negativeYFactor, resizeFactor), /*Duration.millis(220000)*/Duration.millis( (2000 *Math.pow(Dragon.getInstance().getCurve().size(),.6)) + 4000));
+        playAnimation();
+    }
+
+    private void playAnimation(){
+        if(currLevel<=1) { //switch to <= to always draw whole fractal, >= to animate only the previous level (only animates half of current level)
+            animation = createPathAnimation(createPath(), Duration.millis( (2000 *Math.pow(Dragon.getInstance().getCurve().size(),.6)) + 4000));
+        }else {
+            animation = createPathAnimation(createPath(), Duration.millis(((2000 * Math.pow(Dragon.getInstance().getCurve().size(), .6)) + 4000)/2));
+        }
+
         animation.play();
     }
 
+    private void drawSkeleton(){
+        gc.setStroke(Color.BLACK);
+
+        //Goes through all turns, and draws the basic black skeleton of the fractal. Deals with all transformation of old points using negativeFactors, resizeFactor, and margin
+        for (int i = 1; i < curveList.getWholeCurve().size(); i++){
+            double startAnX = ((curveList.getWholeCurve().get(i-1).getX()-(curveList.getFurthestLeft() + curveList.getNegativeXFactor())) * curveList.getResizeFactor(width,height,margin))+margin;
+            double startAnY = ((curveList.getWholeCurve().get(i-1).getY()-(curveList.getFurthestUp() + curveList.getNegativeYFactor())) * curveList.getResizeFactor(width,height,margin))+margin;
+            double endAnX = ((curveList.getWholeCurve().get(i).getX()-(curveList.getFurthestLeft() + curveList.getNegativeXFactor())) * curveList.getResizeFactor(width,height,margin))+margin;
+            double endAnY = ((curveList.getWholeCurve().get(i).getY()-(curveList.getFurthestUp() + curveList.getNegativeYFactor())) * curveList.getResizeFactor(width,height,margin))+margin;
+            //draw scaled lines
+            gc.strokeLine(startAnX, startAnY, endAnX, endAnY);
+
+        }
+    }
+
+    /**
+     * Generates the list of points for the level previous
+     * @return A list of points for the level previous
+     */
+    private ArrayList<Point> getPrevCurve(){
+        ArrayList<Point> prevCurve = new ArrayList<>();
+        for (Point p : curveList.getWholeCurve().subList(0, (curveList.getWholeCurve().size()/2)+1)){
+            prevCurve.add(p);
+        }
+        return prevCurve;
+    }
 
     /**
      * This function creates a ListOfPoints object containing a list of the coords of all turns in the fractal using the generated list of turns in the Dragon singleton.
@@ -314,6 +372,8 @@ public class Controller {
     }
 
 
+
+
     //--------------------------------------------------------------------------------------------------------------------------------------------------------//
 
     //------FOLLOWING CODE MODIFIED FROM:  https://stackoverflow.com/questions/35585035/what-the-easiest-way-to-animate-a-path-as-an-object-traverses-it------//
@@ -323,23 +383,17 @@ public class Controller {
 
     /**
      * Creates a Path object of all of the points in the fractal for the animation to use
-     * @param curve List of all points in the fractal
-     * @param leftest The smallest x coord (including negative), used for transforming to fit screen
-     * @param upest The smallest y coord (including negative), used for transforming to fit screen
-     * @param negativeXFactor Used to account for negative x coords
-     * @param negativeYFactor Used to account for negative y coords
-     * @param resizeFactor Scales fractal to fit screen while retaining square ratio
      * @return Path for animation
      */
-    private Path createPath(ArrayList<Point> curve, int leftest, int upest, int negativeXFactor, int negativeYFactor, double resizeFactor) {
+    private Path createPath() {
 
         Path path = new Path();
         path.setStroke(Color.RED);
         path.setStrokeWidth(2);
 
         //goes through each Point, and creates a line segment for the animation to follow
-        for(int i = 1; i < curve.size(); i++){
-            path.getElements().addAll(new MoveTo(((curve.get(i-1).getX()-(leftest + negativeXFactor)) * resizeFactor)+7, ((curve.get(i-1).getY()-(upest + negativeYFactor)) * resizeFactor)+7), new LineTo(((curve.get(i).getX()-(leftest + negativeXFactor)) * resizeFactor)+7,((curve.get(i).getY()-(upest + negativeYFactor)) * resizeFactor)+7));
+        for(int i = 1; i < curveList.getWholeCurve().size(); i++){
+            path.getElements().addAll(new MoveTo(((curveList.getWholeCurve().get(i-1).getX()-(curveList.getFurthestLeft() + curveList.getNegativeXFactor())) * curveList.getResizeFactor(width,height,margin))+7, ((curveList.getWholeCurve().get(i-1).getY()-(curveList.getFurthestUp() + curveList.getNegativeYFactor())) * curveList.getResizeFactor(width,height,margin))+7), new LineTo(((curveList.getWholeCurve().get(i).getX()-(curveList.getFurthestLeft() + curveList.getNegativeXFactor())) * curveList.getResizeFactor(width,height,margin))+7,((curveList.getWholeCurve().get(i).getY()-(curveList.getFurthestUp() + curveList.getNegativeYFactor())) * curveList.getResizeFactor(width,height,margin))+7));
         }
 
         return path;
@@ -355,13 +409,13 @@ public class Controller {
 
         //width of animation line
         int anWidth = 2;
-
-        gc = canvas.getGraphicsContext2D();
-
         Circle pen = new Circle(0, 0, anWidth);
 
         // create path transition
+
         PathTransition pathTransition = new PathTransition( duration, path, pen);
+        //pathTransition.cycleCountProperty().setValue(2);
+        pathTransition.setAutoReverse(true);
         pathTransition.currentTimeProperty().addListener( new ChangeListener<Duration>() {
 
             Location oldLocation = null;
@@ -389,10 +443,10 @@ public class Controller {
                 }
 
                 // draw line
-                gc.setStroke(Color.hsb(0,1,1,1));
-                gc.setFill(Color.YELLOW);
-                gc.setLineWidth(anWidth);
-                gc.strokeLine(oldLocation.x, oldLocation.y, x, y);
+                gcA.setStroke(Color.hsb(0,1,1,1));
+                gcA.setFill(Color.YELLOW);
+                gcA.setLineWidth(anWidth);
+                gcA.strokeLine(oldLocation.x, oldLocation.y, x, y);
 
                 // update old location with current one
                 oldLocation.x = x;
