@@ -1,5 +1,3 @@
-package sample;
-
 import javafx.animation.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -16,7 +14,7 @@ import javafx.util.Duration;
 import javafx.scene.paint.Color;
 import java.util.ArrayList;
 
-import static sample.Controller.Movement.*;
+//import static Controller.Movement.*;
 
 public class Controller {
 
@@ -326,7 +324,7 @@ public class Controller {
         curveList.addPoint(startPoint);
         curveList.addPoint(new Point(startX,startY-lineLength));
         startY-=lineLength;
-        facing = UP;
+        facing = Movement.UP;
 
         //go through each turn in the fractal, and add the resulting end point
         for(Dragon.DIR direction : curve){
@@ -335,44 +333,44 @@ public class Controller {
                     if(direction == Dragon.DIR.L){
                         curveList.addPoint(new Point(startX-lineLength,startY));
                         startX-=lineLength;
-                        facing=LEFT;
+                        facing=Movement.LEFT;
                     }else{
                         curveList.addPoint(new Point(startX+lineLength,startY));
                         startX+=lineLength;
-                        facing=RIGHT;
+                        facing=Movement.RIGHT;
                     }
                     break;
                 case DOWN:
                     if(direction == Dragon.DIR.L){
                         curveList.addPoint(new Point(startX+lineLength,startY));
                         startX+=lineLength;
-                        facing=RIGHT;
+                        facing=Movement.RIGHT;
                     }else{
                         curveList.addPoint(new Point(startX-lineLength,startY));
                         startX-=lineLength;
-                        facing=LEFT;
+                        facing=Movement.LEFT;
                     }
                     break;
                 case LEFT:
                     if(direction == Dragon.DIR.L){
                         curveList.addPoint(new Point(startX,startY+lineLength));
                         startY+=lineLength;
-                        facing=DOWN;
+                        facing=Movement.DOWN;
                     }else{
                         curveList.addPoint(new Point(startX,startY-lineLength));
                         startY-=lineLength;
-                        facing=UP;
+                        facing=Movement.UP;
                     }
                     break;
                 case RIGHT:
                     if(direction == Dragon.DIR.L){
                         curveList.addPoint(new Point(startX,startY-lineLength));
                         startY-=lineLength;
-                        facing=UP;
+                        facing=Movement.UP;
                     }else{
                         curveList.addPoint(new Point(startX,startY+lineLength));
                         startY+=lineLength;
-                        facing=DOWN;
+                        facing=Movement.DOWN;
                     }
                     break;
             }
