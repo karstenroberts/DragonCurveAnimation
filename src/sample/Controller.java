@@ -263,9 +263,9 @@ public class Controller {
 
     private void playAnimation(){
         if(currLevel<=1) { //switch to <= to always draw whole fractal, >= to animate only the previous level (only animates half of current level)
-            animation = createPathAnimation(createPath(), Duration.millis( (2000 *Math.pow(Dragon.getInstance().getCurve().size(),.6)) + 4000));
+            animation = createPathAnimation(createPath(), Duration.millis( (2000 * Math.pow(Dragon.getInstance().getCurve().size(), .6)) + 4000));
         }else {
-            animation = createPathAnimation(createPath(), Duration.millis(((2000 * Math.pow(Dragon.getInstance().getCurve().size(), .6)) + 4000)/2));
+            animation = createPathAnimation(createPath(), Duration.millis(((2000 * Math.pow(Dragon.getInstance().getCurve().size(), .7)) + 4000)/2));
         }
 
         animation.play();
@@ -276,10 +276,19 @@ public class Controller {
 
         //Goes through all turns, and draws the basic black skeleton of the fractal. Deals with all transformation of old points using negativeFactors, resizeFactor, and margin
         for (int i = 1; i < curveList.getWholeCurve().size(); i++){
-            double startAnX = ((curveList.getWholeCurve().get(i-1).getX()-(curveList.getFurthestLeft() + curveList.getNegativeXFactor())) * curveList.getResizeFactor(width,height,margin))+margin;
-            double startAnY = ((curveList.getWholeCurve().get(i-1).getY()-(curveList.getFurthestUp() + curveList.getNegativeYFactor())) * curveList.getResizeFactor(width,height,margin))+margin;
-            double endAnX = ((curveList.getWholeCurve().get(i).getX()-(curveList.getFurthestLeft() + curveList.getNegativeXFactor())) * curveList.getResizeFactor(width,height,margin))+margin;
-            double endAnY = ((curveList.getWholeCurve().get(i).getY()-(curveList.getFurthestUp() + curveList.getNegativeYFactor())) * curveList.getResizeFactor(width,height,margin))+margin;
+
+            double startAnX = ((curveList.getWholeCurve().get(i-1).getX()-(curveList.getFurthestLeft())) * curveList.getResizeFactor(width,height,margin))+margin;
+            double startAnY = ((curveList.getWholeCurve().get(i-1).getY()-(curveList.getFurthestUp())) * curveList.getResizeFactor(width,height,margin))+margin;
+            double endAnX = ((curveList.getWholeCurve().get(i).getX()-(curveList.getFurthestLeft())) * curveList.getResizeFactor(width,height,margin))+margin;
+            double endAnY = ((curveList.getWholeCurve().get(i).getY()-(curveList.getFurthestUp())) * curveList.getResizeFactor(width,height,margin))+margin;
+            if (i == 1) {
+                System.out.println(curveList.getFurthestLeft());
+                System.out.println(curveList.getFurthestUp());
+                //System.out.println(curveList.getNegativeXFactor());
+                //System.out.println(curveList.getNegativeYFactor());
+                System.out.println(curveList.getResizeFactor(width,height,margin));
+
+            }
             //draw scaled lines
             gc.strokeLine(startAnX, startAnY, endAnX, endAnY);
 
@@ -393,7 +402,7 @@ public class Controller {
 
         //goes through each Point, and creates a line segment for the animation to follow
         for(int i = 1; i < curveList.getWholeCurve().size(); i++){
-            path.getElements().addAll(new MoveTo(((curveList.getWholeCurve().get(i-1).getX()-(curveList.getFurthestLeft() + curveList.getNegativeXFactor())) * curveList.getResizeFactor(width,height,margin))+7, ((curveList.getWholeCurve().get(i-1).getY()-(curveList.getFurthestUp() + curveList.getNegativeYFactor())) * curveList.getResizeFactor(width,height,margin))+7), new LineTo(((curveList.getWholeCurve().get(i).getX()-(curveList.getFurthestLeft() + curveList.getNegativeXFactor())) * curveList.getResizeFactor(width,height,margin))+7,((curveList.getWholeCurve().get(i).getY()-(curveList.getFurthestUp() + curveList.getNegativeYFactor())) * curveList.getResizeFactor(width,height,margin))+7));
+            path.getElements().addAll(new MoveTo(((curveList.getWholeCurve().get(i-1).getX()-(curveList.getFurthestLeft())) * curveList.getResizeFactor(width,height,margin))+7, ((curveList.getWholeCurve().get(i-1).getY()-(curveList.getFurthestUp())) * curveList.getResizeFactor(width,height,margin))+7), new LineTo(((curveList.getWholeCurve().get(i).getX()-(curveList.getFurthestLeft())) * curveList.getResizeFactor(width,height,margin))+7,((curveList.getWholeCurve().get(i).getY()-(curveList.getFurthestUp())) * curveList.getResizeFactor(width,height,margin))+7));
         }
 
         return path;
@@ -414,6 +423,7 @@ public class Controller {
         // create path transition
 
         PathTransition pathTransition = new PathTransition( duration, path, pen);
+        pathTransition.setInterpolator(Interpolator.LINEAR);
         //pathTransition.cycleCountProperty().setValue(2);
         pathTransition.setAutoReverse(true);
         pathTransition.currentTimeProperty().addListener( new ChangeListener<Duration>() {

@@ -39,28 +39,6 @@ public class ListOfPoints {
         this.wholeCurve.add(point);
     }
 
-    //If some of the starting points had negative coords, need to account for that so entire fractal is on screen.
-    public int getNegativeXFactor(){
-        int negativeXFactor = 0;
-        if (furthestLeft < 0){
-            negativeXFactor = furthestLeft;
-            furthestRight -= furthestLeft;
-            furthestLeft -= furthestLeft;
-        }
-        return negativeXFactor;
-    }
-
-    //If some of the starting points had negative coords, need to account for that so entire fractal is on screen.
-    public int getNegativeYFactor(){
-        int negativeYFactor = 0;
-        if (furthestUp < 0){
-            negativeYFactor = furthestUp;
-            furthestDown -= furthestUp;
-            furthestUp -= furthestUp;
-        }
-        return negativeYFactor;
-    }
-
     //resizeFactor is used to scale up or down the fractal to fit the screen. Uses min of x scale or y scale on both X and Y coords so proportionally still square.
     //takes into account buffer space between edge of drawing canvas and the drawn fractal
     public double getResizeFactor(double width, double height, double margin){
